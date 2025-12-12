@@ -24,7 +24,6 @@ export interface VendingMachine {
   remainingCash: Cash;
   message: string;
   selectedDrinkId: string | null;
-  //   activeDrinks: DrinkItem[];
 }
 
 export type VendingMachineAction =
@@ -36,7 +35,7 @@ export type VendingMachineAction =
   | { type: "PROCESS_PURCHASE"; payload: { selectedDrink: DrinkItem } }
   | { type: "COMPLETE_DISPENSING" }
   | { type: "RETURN_REQUEST" }
-  | { type: "COMPLETE_CHANGE_RETURN" }
+  | { type: "COMPLETE_CHANGE_RETURN"; payload: { remainingCash: number } }
   | { type: "CHANGE_INSUFFICIENT" }
   | { type: "SET_ERROR"; payload: string }
   | { type: "RESET_STATE" }

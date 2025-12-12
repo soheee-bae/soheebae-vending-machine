@@ -1,10 +1,11 @@
-import { useMemo, useReducer } from "react";
-import { initialState } from "../datas/initialData";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { CashList, initialState } from "../datas/initialData";
 import {
   MachineState,
   type VendingMachine,
   type VendingMachineAction,
 } from "../types/machine";
+import type { Cash } from "../types/cash";
 
 const vendingMachineReducer = (
   state: VendingMachine,
@@ -15,7 +16,6 @@ const vendingMachineReducer = (
       const insertedAmount = action.payload.insertedAmount;
       const newBalance = state.currentBalance + insertedAmount;
 
-      // [예외 처리] 거래 처리 중 현금 투입 방지
       if (
         state.currentState === MachineState.PROCESSING ||
         state.currentState === MachineState.DISPENSING ||
@@ -29,20 +29,22 @@ const vendingMachineReducer = (
 
       let newState: VendingMachine;
 
-      // [예외 처리] CARD_PAYMENT 상태에서 현금 투입 시 현금 모드 전환
-      if (state.currentState === MachineState.CARD_PAYMENT) {
+      if (
+        state.currentState === MachineState.CARD_PAYMENT ||
+        state.isCardReady
+      ) {
         newState = {
           ...state,
           isCardReady: false,
           currentBalance: newBalance,
           currentState: MachineState.CASH_PAYMENT,
-          message: `${insertedAmount}원 투입. 카드 결제 취소, 현금 모드 전환. 현재 잔액: ${newBalance}원`,
+          message: "카드 결제 취소, 현금 모드로 전환했습니다.",
         };
       } else {
         newState = {
           ...state,
           currentBalance: newBalance,
-          currentState: MachineState.CASH_PAYMENT, // 현금 투입 -> CASH PAYMENT
+          currentState: MachineState.CASH_PAYMENT,
           message: `${insertedAmount}원 투입. 현재 잔액: ${newBalance}원`,
         };
       }
@@ -51,19 +53,16 @@ const vendingMachineReducer = (
     }
 
     case "START_CARD_PAYMENT": {
-      // READY -> CARD PAYMENT
       return {
-        // 인벤토리 상태를 보존
         ...initialState,
         inventory: state.inventory,
         remainingCash: state.remainingCash,
         currentState: MachineState.CARD_PAYMENT,
-        message: "카드를 리더기에 넣어주세요. 승인 대기 중...",
+        message: "카드 승인 대기 중...",
       };
     }
 
     case "CARD_PAYMENT_SUCCESS": {
-      // CARD PAYMENT -> READY TO SELECT
       return {
         ...state,
         isCardReady: true,
@@ -73,7 +72,6 @@ const vendingMachineReducer = (
     }
 
     case "CARD_PAYMENT_FAILURE": {
-      // CARD PAYMENT -> ERROR
       return {
         ...state,
         currentState: MachineState.ERROR,
@@ -81,22 +79,19 @@ const vendingMachineReducer = (
       };
     }
 
-    // [상태 전이 로직] CASH PAYMENT 상태에서 구매 가능한 아이템들 확인
     case "CHECK_ACTIVE_ITEM": {
       const canBuyAnyDrink = state.inventory.some(
         (drink) => drink.price <= state.currentBalance && drink.stock > 0
       );
 
-      // 구매 가능한 음료가 있고, 현재 현금 결제 모드라면 READY_TO_SELECT로 전이
       if (canBuyAnyDrink) {
         return {
           ...state,
-          isCashReady: true, // isCashReady: true
+          isCashReady: true,
           currentState: MachineState.READY_TO_SELECT,
-          message: `잔액 ${state.currentBalance}원. 구매 가능한 음료를 선택하세요.`,
+          message: `구매 가능한 음료를 선택하세요.`,
         };
       }
-      // 구매 가능한 음료가 없더라도 현금 모드는 유지
       return {
         ...state,
         isCashReady: false,
@@ -108,26 +103,17 @@ const vendingMachineReducer = (
       if (state.currentState !== MachineState.READY_TO_SELECT) return state;
 
       const selectedDrink = state.inventory.find(
-        (d) => d.id === action.payload
+        (item) => item.id === action.payload
       );
 
+      // 확인차 다시 한번더 재고 체크
       if (!selectedDrink || selectedDrink.stock <= 0) {
-        // 재고 없음
         return vendingMachineReducer(state, {
           type: "SET_ERROR",
           payload: "재고가 없습니다.",
         });
       }
 
-      // [금액 확인] 현금 결제 모드일 때만 잔액 확인
-      if (state.isCashReady && state.currentBalance < selectedDrink.price) {
-        return vendingMachineReducer(state, {
-          type: "SET_ERROR",
-          payload: "잔액이 부족합니다.",
-        });
-      }
-
-      // READY TO SELECT -> PROCESSING
       return {
         ...state,
         selectedDrinkId: action.payload,
@@ -141,37 +127,35 @@ const vendingMachineReducer = (
       const { selectedDrink } = action.payload;
       let changeAmount = 0;
 
-      const newInventory = state.inventory.map((d) =>
-        d.id === selectedDrink.id ? { ...d, stock: d.stock - 1 } : d
+      // 확인차 다시 한번더 잔액 체크
+      if (state.isCashReady && state.currentBalance < selectedDrink.price) {
+        return vendingMachineReducer(state, {
+          type: "SET_ERROR",
+          payload: "잔액이 부족합니다.",
+        });
+      }
+
+      const newInventory = state.inventory.map((item) =>
+        item.id === selectedDrink.id ? { ...item, stock: item.stock - 1 } : item
       );
 
-      // 잔액 계산 및 잔돈 반환 결정
       if (state.isCashReady) {
         changeAmount = state.currentBalance - selectedDrink.price;
       }
 
-      const nextState =
-        state.isCashReady && changeAmount > 0
-          ? MachineState.RETURNING_CHANGE // 잔돈 남으면 RETURNING_CHANGE
-          : MachineState.DISPENSING; // 잔돈 없거나 카드 결제면 DISPENSING
-
       return {
         ...state,
-        currentBalance: changeAmount > 0 ? changeAmount : 0, // 잔돈 금액을 currentBalance에 남김 (반환 대기)
+        currentBalance: changeAmount > 0 ? changeAmount : 0,
         inventory: newInventory,
         message: "음료 배출 중...",
-        currentState: nextState,
-        isCardReady: false, // 카드 결제 플래그 해제
-        isCashReady: false, // 현금 결제 플래그 해제 (결제 완료)
+        currentState: MachineState.DISPENSING,
+        isCardReady: false,
+        isCashReady: false,
       };
     }
 
     case "RETURN_REQUEST": {
-      // 사용자가 음료를 구매하지 않고 현금 반환 요청 시
-      if (
-        state.currentBalance > 0 &&
-        (state.currentState === MachineState.CASH_PAYMENT || state.isCashReady)
-      ) {
+      if (state.currentBalance > 0) {
         return {
           ...state,
           currentState: MachineState.RETURNING_CHANGE,
@@ -182,7 +166,6 @@ const vendingMachineReducer = (
     }
 
     case "COMPLETE_DISPENSING": {
-      // 배출 완료 후 잔돈이 남았는지 확인
       if (state.currentBalance > 0) {
         return vendingMachineReducer(state, { type: "RETURN_REQUEST" });
       }
@@ -190,12 +173,46 @@ const vendingMachineReducer = (
     }
 
     case "COMPLETE_CHANGE_RETURN": {
-      // 잔돈 반환 완료 -> READY
-      return vendingMachineReducer(state, { type: "RESET_STATE" });
+      const newRemainingCash = { ...state.remainingCash };
+      const distribution: Record<number, number> = {};
+      let remaining = state.currentBalance;
+
+      for (const cash of CashList) {
+        const available =
+          state.remainingCash[cash as keyof typeof state.remainingCash] ?? 0;
+        const useCount = Math.min(Math.floor(remaining / cash), available);
+        if (useCount > 0) {
+          distribution[cash] = useCount;
+          remaining -= useCount * cash;
+        }
+      }
+
+      for (const cash of CashList) {
+        const used = distribution[cash] ?? 0;
+        if (used > 0) {
+          newRemainingCash[cash as keyof typeof newRemainingCash] =
+            (newRemainingCash[cash as keyof typeof newRemainingCash] ?? 0) -
+            used;
+        }
+      }
+
+      return {
+        ...state,
+        inventory: state.inventory,
+        remainingCash: newRemainingCash,
+        currentState: MachineState.READY_TO_SELECT,
+      };
     }
 
     case "CHANGE_INSUFFICIENT": {
-      // 자판기 잔돈 부족 -> ERROR
+      return {
+        ...state,
+        currentState: MachineState.ERROR,
+        message: "잔돈이 부족합니다. 관리실에 문의 바랍니다.",
+      };
+    }
+
+    case "SET_ERROR": {
       return {
         ...state,
         currentState: MachineState.ERROR,
@@ -203,16 +220,7 @@ const vendingMachineReducer = (
       };
     }
 
-    case "SET_ERROR": {
-      return {
-        ...state,
-        currentState: MachineState.ERROR, // ERROR 상태
-        message: action.payload,
-      };
-    }
-
     case "RESET_STATE": {
-      // 초기 상태로 돌아가되, 인벤토리는 유지
       return {
         ...initialState,
         inventory: state.inventory,
@@ -229,79 +237,126 @@ const vendingMachineReducer = (
 export const useVendingMachine = () => {
   const [state, dispatch] = useReducer(vendingMachineReducer, initialState);
 
+  const isLoading = useMemo(() => {
+    return (
+      state.currentState === MachineState.CARD_PAYMENT ||
+      state.currentState === MachineState.PROCESSING ||
+      state.currentState === MachineState.DISPENSING ||
+      state.currentState === MachineState.RETURNING_CHANGE
+    );
+  }, [state.currentState]);
+
+  const changeCheck = (amount: number) => {
+    if (amount <= 0) return 0;
+    let remaining = amount;
+    for (const cash of CashList) {
+      const available =
+        state.remainingCash[cash as keyof typeof state.remainingCash] ?? 0;
+      const useCount = Math.min(Math.floor(remaining / cash), available);
+      remaining -= useCount * cash;
+      if (remaining <= 0) break;
+    }
+
+    return remaining;
+  };
+
+  const requestReturnChange = useCallback(() => {
+    if (
+      state.currentBalance > 0 &&
+      state.currentState !== MachineState.RETURNING_CHANGE
+    ) {
+      dispatch({ type: "RETURN_REQUEST" });
+    } else {
+      dispatch({ type: "RESET_STATE" });
+    }
+  }, [state.currentBalance, state.currentState]);
+
+  useEffect(() => {
+    if (state.currentState !== MachineState.RETURNING_CHANGE) return;
+
+    const timer = setTimeout(() => {
+      const remainingCash = changeCheck(state.currentBalance);
+      if (remainingCash <= 0) {
+        dispatch({
+          type: "COMPLETE_CHANGE_RETURN",
+          payload: { remainingCash },
+        });
+        dispatch({ type: "RESET_STATE" });
+      } else {
+        dispatch({ type: "CHANGE_INSUFFICIENT" });
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [state.currentState, state.currentBalance, state.remainingCash]);
+
   const actions = useMemo(
     () => ({
       insertMoney: (amount: number) => {
-        // if (state.currentState !== MachineState.READY) return;
         dispatch({ type: "INSERT_CASH", payload: { insertedAmount: amount } });
       },
 
       startCardPayment: async () => {
-        if (state.currentState !== MachineState.READY) return;
         dispatch({ type: "START_CARD_PAYMENT" });
 
-        const isSuccess = true;
-        if (isSuccess) {
-          dispatch({ type: "CARD_PAYMENT_SUCCESS" });
-        } else {
-          dispatch({ type: "CARD_PAYMENT_FAILURE" });
-        }
+        setTimeout(() => {
+          const isSuccess = Math.random() > 0.3;
+          if (isSuccess) {
+            dispatch({ type: "CARD_PAYMENT_SUCCESS" });
+          } else {
+            dispatch({ type: "CARD_PAYMENT_FAILURE" });
+          }
+        }, 1500);
       },
 
       selectDrink: (drinkId: string) => {
         if (state.currentState !== MachineState.READY_TO_SELECT) return;
 
-        const selectedDrink = state.inventory.find((d) => d.id === drinkId);
+        const selectedDrink = state.inventory.find(
+          (item) => item.id === drinkId
+        );
         if (!selectedDrink) return;
 
-        // SELECT_DRINK 액션 디스패치 후 구매 처리 시작
         dispatch({ type: "SELECT_DRINK", payload: drinkId });
-        dispatch({ type: "PROCESS_PURCHASE", payload: { selectedDrink } });
 
-        // 비동기 배출 및 반환 프로세스 시작
-        // processDispenseAndReturn(selectedDrink);
+        setTimeout(() => {
+          dispatch({ type: "PROCESS_PURCHASE", payload: { selectedDrink } });
+          setTimeout(() => {
+            dispatch({ type: "COMPLETE_DISPENSING" });
+            requestReturnChange();
+          }, 1500);
+        }, 1500);
       },
 
-      //   requestReturn: () => {
-      //     if (state.currentBalance > 0) {
-      //       dispatch({ type: "RETURN_REQUEST" });
+      requestReturnChange,
 
-      //       // 잔돈 반환 처리 로직 호출
-      //       if (mockChangeCheck(state.currentBalance)) {
-      //         setTimeout(
-      //           () => dispatch({ type: "COMPLETE_CHANGE_RETURN" }),
-      //           1500
-      //         );
-      //       } else {
-      //         dispatch({
-      //           type: "CHANGE_INSUFFICIENT",
-      //           payload: "잔돈이 부족합니다.",
-      //         });
-      //       }
-      //     }
-      //   },
-
-      resetError: () => {
+      resetState: () => {
         dispatch({ type: "RESET_STATE" });
       },
     }),
-    [state.currentBalance, state.currentState, state.inventory]
+    [requestReturnChange, state.currentState, state.inventory]
   );
 
   const isSelectable = (price: number, stock: number) => {
-    if (stock <= 0) return false;
-
-    // READY_TO_SELECT 상태가 아니면 선택 불가
-    if (state.currentState !== MachineState.READY_TO_SELECT) return false;
-
-    if (state.isCashReady) {
-      return state.currentBalance >= price;
+    if (stock <= 0 || isLoading) {
+      return false;
     }
-    if (state.isCardReady) {
-      return true;
+
+    if (state.currentState !== MachineState.READY_TO_SELECT) {
+      return false;
     }
-    return false;
+
+    const isAvailableByCash =
+      state.isCashReady && state.currentBalance >= price;
+    const isAvailableByCard = state.isCardReady;
+
+    return isAvailableByCash || isAvailableByCard;
   };
 
-  return { state, actions, isSelectable };
+  const isCashMode =
+    state.currentState === MachineState.CASH_PAYMENT || state.isCashReady;
+  const isCardMode =
+    state.currentState === MachineState.CARD_PAYMENT || state.isCardReady;
+
+  return { state, actions, isSelectable, isCashMode, isCardMode, isLoading };
 };

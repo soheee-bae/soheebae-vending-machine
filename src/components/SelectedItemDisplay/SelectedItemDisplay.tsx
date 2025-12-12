@@ -13,10 +13,8 @@ function SelectedItemDisplay() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.selected}>
-        <p className={styles.name}>선택한 음료 : {selectedItem?.name || "-"}</p>
-        <p className={styles.price}>가격 : {selectedItem?.price || "-"}</p>
-      </div>
+      <p className={styles.name}>선택한 음료 : {selectedItem?.name || "-"}</p>
+      <p className={styles.price}>가격 : {selectedItem?.price || 0}원</p>
     </div>
   );
 }

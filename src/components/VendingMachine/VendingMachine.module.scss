@@ -1,5 +1,5 @@
 .container {
-  border: 3px solid var(--base-white-300);
+  border: 3px solid var(--base-gray-100);
   border-radius: 15px;
 
   display: flex;
@@ -13,6 +13,6 @@
 }
 
 .divider {
-  background-color: var(--base-white-300);
+  background-color: var(--base-gray-100);
   min-height: 3px;
 }

@@ -1,17 +1,11 @@
 import styles from "./Display.module.scss";
-
 import { useVendingMachineContext } from "../../hooks/useVendingMachineContext";
-import Tag from "../Tag/Tag";
-import CashEntries from "../CashEntries/CashEntries";
+import { Tag, CashEntries } from "..";
 
 function Display() {
-  const { state } = useVendingMachineContext();
-
-  const mode = state.isCardReady
-    ? "CARD MODE"
-    : state.isCashReady
-    ? "CASH MODE"
-    : "";
+  const { state, isCardMode, isCashMode } = useVendingMachineContext();
+  const mode = isCardMode ? "CARD MODE" : isCashMode ? "CASH MODE" : "";
+  const currentAmont = state.currentBalance.toLocaleString("ko-KR");
 
   return (
     <div className={styles.container}>
@@ -20,7 +14,7 @@ function Display() {
           <Tag label={state.currentState} />
           <Tag label={mode} />
         </div>
-        <p className={styles.balance}>Balance : {state.currentBalance}원</p>
+        <p className={styles.balance}>잔액 : {currentAmont}원</p>
         <p className={styles.message}>{state.message}</p>
       </div>
       <CashEntries />

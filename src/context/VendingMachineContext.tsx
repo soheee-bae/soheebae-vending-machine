@@ -7,10 +7,16 @@ export interface VendingMachineContextType {
   state: VendingMachine;
   actions: ReturnType<typeof useVendingMachine>["actions"] | null;
   isSelectable: (price: number, stock: number) => boolean;
+  isCashMode: boolean;
+  isCardMode: boolean;
+  isLoading: boolean;
 }
 
 export const VendingMachineContext = createContext<VendingMachineContextType>({
   state: initialState,
   actions: null,
   isSelectable: () => false,
+  isCashMode: false,
+  isCardMode: false,
+  isLoading: false,
 });

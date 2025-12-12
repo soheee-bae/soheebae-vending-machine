@@ -30,3 +30,5 @@ export const initialState: VendingMachine = {
   remainingCash: initialRemainingCash,
   message: "현금을 투입하거나 카드를 선택하세요.",
 };
+
+export const CashList: number[] = [10000, 5000, 1000, 500, 100];

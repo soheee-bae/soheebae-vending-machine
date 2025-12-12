@@ -1,18 +1,20 @@
 import styles from "./ProductGrid.module.scss";
-
-import { initialInventory } from "../../datas/initialData";
 import { Button, Tag } from "..";
+import { useVendingMachineContext } from "../../hooks/useVendingMachineContext";
 
 function ProductGrid() {
+  const { actions, state, isSelectable } = useVendingMachineContext();
   return (
     <div className={styles.container}>
-      {initialInventory.map((inventory) => {
+      {state.inventory.map((inventory) => {
         const isOutOfStock = inventory.stock <= 0;
         const price = inventory.price.toLocaleString("ko-KR");
+        const disabled = !isSelectable(inventory.price, inventory.stock);
 
         return (
           <Button
-            onClick={() => {}}
+            onClick={() => actions?.selectDrink(inventory.id)}
+            disabled={disabled}
             key={inventory.id}
             label={
               <div key={inventory.id} className={styles.card}>

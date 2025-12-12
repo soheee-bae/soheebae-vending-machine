@@ -1,21 +1,21 @@
 import styles from "./CashInputButton.module.scss";
 import Button from "../Button/Button";
 import { useVendingMachineContext } from "../../hooks/useVendingMachineContext";
-
-const CASH: number[] = [100, 500, 1000, 5000, 10000];
+import { CashList } from "../../datas/initialData";
 
 function CashInputButton() {
-  const { actions } = useVendingMachineContext();
+  const { actions, isLoading } = useVendingMachineContext();
 
   return (
     <div className={styles.container}>
       <p className={styles.title}>현금</p>
       <div className={styles.cards}>
-        {CASH.map((cash) => {
+        {CashList.map((cash) => {
           const cashAmount = cash.toLocaleString("ko-KR");
           return (
             <Button
               key={cash}
+              disabled={isLoading}
               label={`${cashAmount}원`}
               size="sm"
               onClick={() => {

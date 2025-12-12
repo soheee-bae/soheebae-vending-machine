@@ -3,7 +3,7 @@ import styles from "./Tag.module.scss";
 import type { ReactNode } from "react";
 
 type Size = "sm" | "md";
-type Color = "primary" | "darkerGray";
+type Color = "light" | "dark";
 
 interface TagProps {
   size?: Size;
@@ -13,14 +13,14 @@ interface TagProps {
 }
 
 function Tag(props: TagProps) {
-  const { size = "md", color = "primary", label, icon } = props;
+  const { size = "md", color = "light", label, icon } = props;
 
   if (!label) return null;
 
   return (
     <div
       className={clsx(styles.container, styles[size], {
-        [styles.darkerGray]: color === "darkerGray",
+        [styles.darkerGray]: color === "dark",
       })}
     >
       {icon}

@@ -1,8 +1,9 @@
-import { initialRemainingCash } from "../../datas/initialData";
+import { useVendingMachineContext } from "../../hooks/useVendingMachineContext";
 import styles from "./CashEntries.module.scss";
 
 function CashEntries() {
-  const cashEntries = Object.entries(initialRemainingCash);
+  const { state } = useVendingMachineContext();
+  const cashEntries = Object.entries(state.remainingCash);
 
   return (
     <div className={styles.container}>
