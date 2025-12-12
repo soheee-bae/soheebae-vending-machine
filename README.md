@@ -1,73 +1,32 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### 1.프로젝트 개요
 
-Currently, two official plugins are available:
+이름: soheebae-vending-machine
+설명: 간단한 자판기 시뮬레이터 (React + TypeScript)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. 실행 방법 
+1. 설치 : `npm install`
+2. 개발 서버 실행 : `npm run dev`
 
-## React Compiler
+### 2. 사용된 기술 및 버전
+- 프레임워크: React (19.2.0)
+- 언어: TypeScript (~5.9.3)
+- 번들러/빌드: Vite (7.2.4)
+- 상태 관리: React Hooks (useReducer, useMemo, useEffect, useContext)
+- 스타일: Sass/CSS Modules (1.96.0), clsx (2.1.1)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 3.참고 자료 및 도구
+- 주요 도식 : draw.io를 사용하여 도식 문서를 만들었습니다.
+- 아이콘 : svgrepo의 아이콘을 사용했습니다.
+- 도구: VS Code Studio, Gemini와 Chrome 개발자 도구를 사용했습니다.
 
-## Expanding the ESLint configuration
+### 4. AI 활용 내역 (Gemini)
+- `selectDrink` 이후의 구매 처리, 배출, 잔돈 반환으로 이어지는 시간차 비동기 흐름을 해결하기 위해 중첩 setTimeout을 제안받아 사용하였습니다. 
+- `useVendingMachine` 훅 리팩토링(거스름돈 타이밍/효과 수정, requestReturnChange 안정화)에 사용했습니다.
+- 잔돈 계산 함수 `changeCheck`의 타입 안전성과 오류를 검토하고 수정하는 데 참고했습니다.
+- Nano Banana AI를 사용해 간단한 자판기 UI를 추천 받았습니다.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+제출 :
+- 도식 문서 : [Vending Machine State Diagram.pdf](https://github.com/user-attachments/files/24121245/Vending.Machine.State.Diagram.pdf)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
