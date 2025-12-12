@@ -21,4 +21,5 @@
 - 도구: VS Code Studio, Gemini와 Chrome 개발자 도구를 사용했습니다.
 
 
-제출 문서 : [Vending Machine - SoHee Bae.pdf](https://github.com/user-attachments/files/24123063/Vending.Machine.-.SoHee.Bae.pdf)
+제출 문서 : [Vending Machine - SoHee Bae.pdf](https://github.com/user-attachments/files/24123121/Vending.Machine.-.SoHee.Bae.pdf)
+
