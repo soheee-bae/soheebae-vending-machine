@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 0 0;
+  gap: 15px;
+  width: 70%;
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  svg {
+    position: relative;
+    width: 40px;
+    height: auto;
+    aspect-ratio: 1/1;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-md);
+
+  :first-child {
+    font-weight: var(--font-semibold);
+  }
+}
+
+.stock {
+  font-size: var(--text-sm);
+  color: var(--base-gray-100);
+}

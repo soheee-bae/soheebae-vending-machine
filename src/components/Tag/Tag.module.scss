@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  width: fit-content;
+
+  color: var(--base-black-300);
+  font-weight: var(--font-medium);
+  background-color: var(--base-gray-100);
+  border-radius: 8px;
+}
+
+.md {
+  font-size: var(--text-xs);
+}
+
+.sm {
+  font-size: var(--text-2xs);
+}
+
+.darkerGray {
+  background-color: var(--base-black-100);
+  color: var(--base-white);
+}

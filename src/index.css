@@ -1,0 +1,16 @@
+body {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: var(--font-family-nanum-gothic);
+  font-family: var(--font-family-google-sans);
+
+  p {
+    margin: 0;
+  }
+}

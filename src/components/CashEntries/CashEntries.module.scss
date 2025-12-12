@@ -1,0 +1,15 @@
+.container {
+  font-size: var(--text-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-weight: var(--font-medium);
+}
+
+.cashLabel {
+  display: flex;
+  justify-content: space-between;
+}

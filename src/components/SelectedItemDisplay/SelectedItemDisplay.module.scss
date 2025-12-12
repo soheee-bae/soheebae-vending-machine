@@ -1,0 +1,18 @@
+.container {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.selected {
+  .name {
+    margin-bottom: 6px;
+  }
+}
+
+.selected {
+  height: 100%;
+  width: 30%;
+  border: 1px solid var(--base-gray-100);
+  padding: 20px;
+  border-radius: 8px;
+}

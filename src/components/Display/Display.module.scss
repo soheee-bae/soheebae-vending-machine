@@ -1,0 +1,32 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 15px;
+  padding: 20px;
+  border: 2px solid var(--base-white-300);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tags {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.balance {
+  font-size: var(--text-md);
+  font-weight: var(--font-medium);
+  margin-top: 4px;
+}
+
+.message {
+  font-size: var(--text-sm);
+  color: var(--base-gray-300);
+}

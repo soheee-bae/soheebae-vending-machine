@@ -1,0 +1,19 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  width: 100%;
+
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+}
+
+.box {
+  border: 2px solid var(--base-gray-100);
+  border-radius: 15px;
+
+  height: 100%;
+  width: 60%;
+}
